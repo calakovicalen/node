@@ -1,120 +1,154 @@
-const { v4: uuid } = require('uuid');
-import { database } from '../data/database';
 import { Response } from 'express';
-import { Cart, CartItem } from '../models/cart.model';
+import { Cart, CartItem, CartModel } from '../models/cart.model';
+import { Types } from 'mongoose';
+import { User } from '../models/user.model';
 
-export const getCart = (userId: string, cartId: string, res: Response) => {
-  const cart = database.carts.find(cart => cart.id === cartId);
-  const user = database.users.find(user => user.id === userId);
-
-  if (!user) {
-    return res.status(404).json({
-      status: 'fail',
-      message: 'User not found.',
-    });
+const doesUserExist = async (userId: string): Promise<boolean> => {
+  if (!Types.ObjectId.isValid(userId)) {
+    return false;
   }
 
-  if (!cart) {
-    const newCart: Cart = {
-      id: uuid(),
-      userId: userId,
-      isDeleted: false,
-      items: [],
-    };
+  const user = await User.findById(userId);
+  return !!user;
+};
 
-    res.status(201).json({
-      status: 'created',
-      data: { cart: newCart },
-    });
-  } else {
+export const getCart = async (
+  userId: string,
+  cartId: string,
+  res: Response
+) => {
+  try {
+    const isUserValid = await doesUserExist(userId);
+    console.log(isUserValid);
+
+    let cart: Cart;
+
+    if (Types.ObjectId.isValid(cartId)) {
+      cart = await CartModel.findById(cartId);
+    }
+
+    if (!cart) {
+      const newCart = new CartModel({
+        userId: userId,
+        isDeleted: false,
+        items: [],
+      });
+
+      await newCart.save();
+
+      return res.status(201).json({
+        status: 'created',
+        data: { cart: newCart },
+      });
+    }
+
     res.status(200).json({
       status: 'success',
       data: { cart },
     });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error' + error.message,
+    });
   }
 };
 
-export const updateCart = (
+export const updateCart = async (
   cartId: string,
   updatedItems: CartItem[],
   res: Response
 ) => {
-  const cartIndex = database.carts.findIndex(cart => cart.id === cartId);
+  try {
+    const updatedCart = await CartModel.findByIdAndUpdate(
+      cartId,
+      { items: updatedItems },
+      { new: true }
+    );
 
-  if (cartIndex !== -1) {
-    const updatedCart: Cart = {
-      ...database.carts[cartIndex],
-      items: updatedItems,
-    };
-
-    database.carts[cartIndex] = updatedCart;
-
-    res.status(200).json({
-      status: 'success',
-      message: 'User cart updated',
-      data: { updatedCart },
-    });
-  } else {
-    res.status(404).json({
+    if (updatedCart) {
+      res.status(200).json({
+        status: 'success',
+        message: 'User cart updated',
+        data: { updatedCart },
+      });
+    } else {
+      res.status(404).json({
+        status: 'error',
+        message: 'User cart not found',
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
       status: 'error',
-      message: 'User cart not found',
+      message: 'Internal server error',
     });
   }
 };
 
-export const emptyCart = (cartId: string, res: Response) => {
-  const cartIndex = database.carts.findIndex(cart => cart.id === cartId);
+export const emptyCart = async (cartId: string, res: Response) => {
+  try {
+    const emptyCart = await CartModel.findByIdAndUpdate(
+      cartId,
+      { items: [] },
+      { new: true }
+    );
 
-  if (cartIndex !== -1) {
-    const emptyCart: Cart = {
-      ...database.carts[cartIndex],
-      items: [],
-    };
-
-    database.carts[cartIndex] = emptyCart;
-
-    res.status(200).json({
-      status: 'success',
-      message: 'User cart emptied',
-      data: { emptyCart },
-    });
-  } else {
-    res.status(404).json({
+    if (emptyCart) {
+      res.status(200).json({
+        status: 'success',
+        message: 'User cart emptied',
+        data: { emptyCart },
+      });
+    } else {
+      res.status(404).json({
+        status: 'error',
+        message: 'User cart not found',
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
       status: 'error',
-      message: 'User cart not found',
+      message: 'Internal server error',
     });
   }
 };
 
-export const createOrder = (
+export const createOrder = async (
   userId: string,
   cartId: string,
   body: any,
   res: Response
 ) => {
-  const cart = database.carts.find(cart => cart.id === cartId);
+  try {
+    const cart = await CartModel.findById(cartId);
 
-  if (!cart || cart.isDeleted) {
-    return res.status(404).send('Cart not found');
+    if (!cart || cart.isDeleted) {
+      return res.status(404).send('Cart not found');
+    }
+
+    const order = {
+      userId,
+      cartId,
+      items: cart.items,
+      payment: body.payment,
+      delivery: body.delivery,
+      comments: body.comments || '',
+      status: 'created',
+      total: cart.items.reduce(
+        (total, item) => total + item.product.price * item.count,
+        0
+      ),
+    };
+
+    res.status(201).json({
+      status: 'created',
+      data: { order },
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error',
+    });
   }
-
-  const order = {
-    id: `order${database.orders.length + 1}`,
-    userId,
-    cartId,
-    items: cart.items,
-    payment: body.payment,
-    delivery: body.delivery,
-    comments: body.comments || '',
-    status: 'created',
-    total: cart.items.reduce(
-      (total, item) => total + item.product.price * item.count,
-      0
-    ),
-  };
-
-  res.status(201).json({
-    status: 'created',
-    data: { order },
-  });
 };

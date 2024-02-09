@@ -1,28 +1,45 @@
 import { Request, Response } from 'express';
-import { database } from '../data/database';
+import { Product } from '../models/product.model';
 
-export const getProducts = (req: Request, res: Response) => {
-  const products = database.products;
+export const getProducts = async (req: Request, res: Response) => {
+  try {
+    const products = await Product.find();
 
-  res.status(200).json({
-    status: 'success',
-    data: { products },
-  });
+    res.status(200).json({
+      status: 'success',
+      data: { products },
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      status: 'fail',
+      message: 'Internal Server Error',
+    });
+  }
 };
 
-export const getProduct = (req: Request, res: Response) => {
+export const getProduct = async (req: Request, res: Response) => {
   const productId = req.params.productId;
-  const product = database.products.find(product => product.id === productId);
 
-  if (product) {
-    return res.status(200).json({
-      status: 'success',
-      data: { product },
-    });
-  } else {
-    return res.status(404).json({
+  try {
+    const product = await Product.findById(productId);
+
+    if (product) {
+      return res.status(200).json({
+        status: 'success',
+        data: { product },
+      });
+    } else {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'Product not found.',
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
       status: 'fail',
-      message: 'Product not found.',
+      message: 'Internal Server Error',
     });
   }
 };
