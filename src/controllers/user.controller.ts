@@ -6,7 +6,7 @@ export const getCartController = (req: Request, res: Response) => {
 };
 
 export const updateCartController = (req: Request, res: Response) => {
-  cartService.updateCart(req.params.cartId, req.body.items, res);
+  cartService.updateCart(req.params.cartId, req.body, res);
 };
 
 export const emptyCartController = (req: Request, res: Response) => {

@@ -2,7 +2,7 @@ import mongoose, { Document } from 'mongoose';
 import { IProduct } from './product.model';
 
 export interface CartItem {
-  product: IProduct;
+  product: IProduct['_id'];
   count: number;
 }
 
