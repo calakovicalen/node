@@ -11,18 +11,23 @@ export const getProducts = (req: Request, res: Response) => {
 };
 
 export const getProduct = (req: Request, res: Response) => {
-  const productId = req.params.productId;
-  const product = database.products.find(product => product.id === productId);
+  try {
+    const productId = req.params.productId;
+    const product = database.products.find(product => product.id === productId);
 
-  if (product) {
-    return res.status(200).json({
-      status: 'success',
-      data: { product },
-    });
-  } else {
-    return res.status(404).json({
+    if (product) {
+      return res.status(200).json({
+        status: 'success',
+        data: { product },
+      });
+    } else {
+      throw new Error('Product not found.');
+    }
+  } catch (error) {
+    console.error('Error getting product:', error.message);
+    res.status(404).json({
       status: 'fail',
-      message: 'Product not found.',
+      message: error.message || 'Product not found.',
     });
   }
 };

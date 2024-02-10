@@ -4,32 +4,37 @@ import { Response } from 'express';
 import { Cart, CartItem } from '../models/cart.model';
 
 export const getCart = (userId: string, cartId: string, res: Response) => {
-  const cart = database.carts.find(cart => cart.id === cartId);
-  const user = database.users.find(user => user.id === userId);
+  try {
+    const cart = database.carts.find(cart => cart.id === cartId);
+    const user = database.users.find(user => user.id === userId);
 
-  if (!user) {
-    return res.status(404).json({
-      status: 'fail',
-      message: 'User not found.',
-    });
-  }
+    if (!user) {
+      throw new Error('User not found.'); // Throw an exception for user not found
+    }
 
-  if (!cart) {
-    const newCart: Cart = {
-      id: uuid(),
-      userId: userId,
-      isDeleted: false,
-      items: [],
-    };
+    if (!cart) {
+      const newCart: Cart = {
+        id: uuid(),
+        userId: userId,
+        isDeleted: false,
+        items: [],
+      };
 
-    res.status(201).json({
-      status: 'created',
-      data: { cart: newCart },
-    });
-  } else {
-    res.status(200).json({
-      status: 'success',
-      data: { cart },
+      res.status(201).json({
+        status: 'created',
+        data: { cart: newCart },
+      });
+    } else {
+      res.status(200).json({
+        status: 'success',
+        data: { cart },
+      });
+    }
+  } catch (error) {
+    console.error('Error getting cart:', error.message);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error',
     });
   }
 };
@@ -39,49 +44,65 @@ export const updateCart = (
   updatedItems: CartItem[],
   res: Response
 ) => {
-  const cartIndex = database.carts.findIndex(cart => cart.id === cartId);
+  try {
+    const cartIndex = database.carts.findIndex(cart => cart.id === cartId);
 
-  if (cartIndex !== -1) {
-    const updatedCart: Cart = {
-      ...database.carts[cartIndex],
-      items: updatedItems,
-    };
+    if (cartIndex !== -1) {
+      const updatedCart: Cart = {
+        ...database.carts[cartIndex],
+        items: updatedItems,
+      };
 
-    database.carts[cartIndex] = updatedCart;
+      database.carts[cartIndex] = updatedCart;
 
-    res.status(200).json({
-      status: 'success',
-      message: 'User cart updated',
-      data: { updatedCart },
-    });
-  } else {
-    res.status(404).json({
+      res.status(200).json({
+        status: 'success',
+        message: 'User cart updated',
+        data: { updatedCart },
+      });
+    } else {
+      res.status(404).json({
+        status: 'error',
+        message: 'User cart not found',
+      });
+    }
+  } catch (error) {
+    console.error('Error updating cart:', error);
+    res.status(500).json({
       status: 'error',
-      message: 'User cart not found',
+      message: 'Internal server error',
     });
   }
 };
 
 export const emptyCart = (cartId: string, res: Response) => {
-  const cartIndex = database.carts.findIndex(cart => cart.id === cartId);
+  try {
+    const cartIndex = database.carts.findIndex(cart => cart.id === cartId);
 
-  if (cartIndex !== -1) {
-    const emptyCart: Cart = {
-      ...database.carts[cartIndex],
-      items: [],
-    };
+    if (cartIndex !== -1) {
+      const emptyCart: Cart = {
+        ...database.carts[cartIndex],
+        items: [],
+      };
 
-    database.carts[cartIndex] = emptyCart;
+      database.carts[cartIndex] = emptyCart;
 
-    res.status(200).json({
-      status: 'success',
-      message: 'User cart emptied',
-      data: { emptyCart },
-    });
-  } else {
-    res.status(404).json({
+      res.status(200).json({
+        status: 'success',
+        message: 'User cart emptied',
+        data: { emptyCart },
+      });
+    } else {
+      res.status(404).json({
+        status: 'error',
+        message: 'User cart not found',
+      });
+    }
+  } catch (error) {
+    console.error('Error emptying cart:', error);
+    res.status(500).json({
       status: 'error',
-      message: 'User cart not found',
+      message: 'Internal server error',
     });
   }
 };
