@@ -1,12 +1,15 @@
 import express, { Request, Response } from 'express';
-import { getProduct, getProducts } from '../services/product.services';
+import {
+  getProductController,
+  getProductsController,
+} from '../controllers/product.controller';
 
 const router = express.Router();
 
-router.get('/', (req: Request, res: Response) => getProducts(req, res));
+router.get('/', (res: Response) => getProductsController(res));
 
 router.get('/:productId', (req: Request, res: Response) =>
-  getProduct(req, res)
+  getProductController(req, res)
 );
 
 export default router;

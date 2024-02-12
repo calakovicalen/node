@@ -1,9 +1,9 @@
-import { Request, Response } from 'express';
-import { Product } from '../models/product.model';
+import { Response } from 'express';
+import { ProductModel } from '../models/product.model';
 
-export const getProducts = async (req: Request, res: Response) => {
+export const getProducts = async (res: Response) => {
   try {
-    const products = await Product.find();
+    const products = await ProductModel.find();
 
     res.status(200).json({
       status: 'success',
@@ -18,11 +18,9 @@ export const getProducts = async (req: Request, res: Response) => {
   }
 };
 
-export const getProduct = async (req: Request, res: Response) => {
-  const productId = req.params.productId;
-
+export const getProduct = async (productId, res) => {
   try {
-    const product = await Product.findById(productId);
+    const product = await ProductModel.findById(productId);
 
     if (product) {
       return res.status(200).json({

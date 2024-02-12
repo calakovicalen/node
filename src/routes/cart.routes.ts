@@ -4,17 +4,17 @@ import {
   emptyCartController,
   getCartController,
   updateCartController,
-} from '../controllers/user.controller';
+} from '../controllers/cart.controller';
 
 const router = express.Router();
 
 router
-  .route('/:userId/:cartId')
+  .route('')
   .get((req: Request, res: Response) => getCartController(req, res))
   .put((req: Request, res: Response) => updateCartController(req, res))
   .delete((req: Request, res: Response) => emptyCartController(req, res));
 
-router.post('/:userId/:cartId/checkout', (req: Request, res: Response) =>
+router.post('/checkout', (req: Request, res: Response) =>
   createOrderController(req, res)
 );
 

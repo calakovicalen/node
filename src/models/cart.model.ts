@@ -1,16 +1,16 @@
 import mongoose, { Document } from 'mongoose';
 import { IProduct } from './product.model';
 
-export interface CartItem {
+export interface ICartItem {
   product: IProduct['_id'];
   count: number;
 }
 
-export interface Cart extends Document {
+export interface ICart extends Document {
   _id: string;
   userId: string;
   isDeleted: boolean;
-  items: CartItem[];
+  items: ICartItem[];
 }
 
 const cartSchema = new mongoose.Schema({
@@ -28,4 +28,4 @@ const cartSchema = new mongoose.Schema({
   ],
 });
 
-export const CartModel = mongoose.model<Cart>('Cart', cartSchema);
+export const CartModel = mongoose.model<ICart>('Cart', cartSchema);

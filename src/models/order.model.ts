@@ -1,13 +1,13 @@
-import { CartItem } from './cart.model';
+import { ICartItem } from './cart.model';
 import { Schema, model, Types } from 'mongoose';
 
 type ORDER_STATUS = 'created' | 'completed';
 
-export interface Order {
+export interface IOrder {
   _id: string;
   userId: string;
   cartId: string;
-  items: CartItem[];
+  items: ICartItem[];
   payment: {
     type: string;
     address?: any;
@@ -25,7 +25,7 @@ export interface Order {
 const orderSchema = new Schema({
   userId: String,
   cartId: String,
-  items: Types.Array<CartItem>,
+  items: Types.Array<ICartItem>,
   payment: {
     type: String,
     address: String,
@@ -40,4 +40,4 @@ const orderSchema = new Schema({
   total: Number,
 });
 
-const Order = model<Order>('Order', orderSchema);
+const OrderModel = model<IOrder>('Order', orderSchema);
