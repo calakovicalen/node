@@ -6,7 +6,7 @@ export const getCart = async (userId: string, res: Response) => {
     let cart: ICart;
 
     cart = await CartModel.findOne({ userId });
-    console.log(cart);
+
     if (!cart) {
       const newCart = new CartModel({
         userId: userId,
@@ -73,7 +73,7 @@ export const emptyCart = async (userId: string, res: Response) => {
       { items: [] },
       { new: true }
     );
-
+    console.log(emptyCart);
     if (emptyCart) {
       res.status(200).json({
         status: 'success',
