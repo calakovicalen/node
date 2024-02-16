@@ -1,11 +1,16 @@
 # Use the official MongoDB image from Docker Hub
-FROM mongo:latest
+FROM node:current-alpine3.19
 
-# Expose the default MongoDB port
-EXPOSE 27017
+WORKDIR /node
 
-# Set the default data directory
-VOLUME /data/db
+COPY package*.json ./
 
-# Start MongoDB when the container starts
-CMD ["mongod"]
+RUN npm i --production
+
+COPY . .
+
+EXPOSE 3000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 CMD curl --fail http://localhost:3000/health || exit 1
+
+CMD [ "npm", "start" ]
